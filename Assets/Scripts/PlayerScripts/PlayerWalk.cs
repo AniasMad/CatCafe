@@ -4,23 +4,26 @@ using UnityEngine;
 
 public class PlayerWalk : MonoBehaviour
 {
-    public float speed;
-    public float rotationSpeed;
-   
+    [SerializeField] private float speed;
+    [SerializeField] private float rotationSpeed;
+
     //v4 jump
-    public float jumpSpeed;
+    [SerializeField] private float jumpSpeed;
     private float ySpeed;
     private float originalStepOffset;
 
     //v5 - improve jump
-    public float jumpButtonGracePeriod;
+    [SerializeField] private float jumpButtonGracePeriod;
     private float? lastGroundedTime; //nullable floattype
     private float? jumpButtonPressedTime;
 
+    [SerializeField] private Transform cameraTransform;
+
     private CharacterController characterController;
-    
-    
-    void Start() {
+
+
+    void Start()
+    {
 
         characterController = GetComponent<CharacterController>();
         //v4 jump
@@ -37,6 +40,7 @@ public class PlayerWalk : MonoBehaviour
         movementDirection = Quaternion.AngleAxis(0, Vector3.up) * movementDirection;
         float magnitude = Mathf.Clamp01(movementDirection.magnitude) * speed;
         //Normalize diretion vector so that it has a range of 0-1
+        movementDirection = Quaternion.AngleAxis(cameraTransform.rotation.eulerAngles.y, Vector3.up) * movementDirection;
         movementDirection.Normalize();
 
         //v4 - Jump. update ySpeed with Gravity
@@ -79,22 +83,34 @@ public class PlayerWalk : MonoBehaviour
         // v4 - Jump. Local var vector3 velocity
         // add ySpeed to velocity
         Vector3 velocity = movementDirection * magnitude;
-       velocity.y = ySpeed;
-       //Time.deltaTime is  required for the charControll Move method
-       characterController.Move(velocity * Time.deltaTime);
+        velocity.y = ySpeed;
+        //Time.deltaTime is  required for the charControll Move method
+        characterController.Move(velocity * Time.deltaTime);
 
-        
+
 
         if (movementDirection != Vector3.zero)
         {
             //changes character to point in direction of movement. 
             // animator.SetBool("IsWalking", true);
             Quaternion toRotation = Quaternion.LookRotation(movementDirection, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime); 
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }
         else
         {
             // animator.SetBool("IsWalking", false);
+        }
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        if (focus)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.None;
         }
     }
 }
