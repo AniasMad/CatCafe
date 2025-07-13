@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,12 +17,16 @@ public class FishGameActivate : MonoBehaviour
     public int meow = 0; // debug int
     private bool fishingStarts = false;
     private bool fishingInProgress = false;
+    private bool fishingEnding = false;
     // Fishing Game Variables
     [Header("Fishing Game stuff~")]
+    [SerializeField] private float bubbleSpeed = 100.0f;
     [SerializeField] private Transform spawn1;
     [SerializeField] private Transform spawn2;
-    [SerializeField] private float spawnTime = 1.5f;
+    [SerializeField] private GameObject catchZone;
+    [SerializeField] private float spawnTime = 3.0f;
     [SerializeField] private GameObject bubble;
+    [SerializeField] private GameObject bubblezone;
     private float timeToSpawn = 0f;
     private int whichSpawnPoint = 0;
     private GameObject[] bubblesArray; // array of bubble objects
@@ -34,33 +39,75 @@ public class FishGameActivate : MonoBehaviour
         river_end = this.transform.Find("river_end").gameObject;
 
         bubblesArray = new GameObject[6];
+        bubblezone.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (fishingStarts)
+        if (fishingStarts || fishingInProgress)
         {
-            if (timeToSpawn == 0)
+            if (fishingStarts)
             {
-                if (whichSpawnPoint == 0)
+                fishingInProgress = true;
+                fishingStarts = false;
+                bubblezone.SetActive(true);
+            }
+            if (timeToSpawn <= 0 && howManyBubbles < 6)
+            {
+                switch (whichSpawnPoint)
                 {
-                    bubblesArray[bubblesIndex] = Instantiate(bubble, spawn1.position, Quaternion.identity, canvas);
+                    case 1:
+                        if (bubblesArray[bubblesIndex] == null)
+                        {
+                            bubblesArray[bubblesIndex] = Instantiate(bubble, spawn1.position, Quaternion.identity, canvas);
+                            whichSpawnPoint = 2;
+                        }
+                        break;
+                    case 2:
+                        if (bubblesArray[bubblesIndex] == null)
+                        {
+                            bubblesArray[bubblesIndex] = Instantiate(bubble, spawn2.position, Quaternion.identity, canvas);
+                            whichSpawnPoint = 1;
+                        }
+                        break;
+                    default:
+                        if (bubblesArray[bubblesIndex] == null)
+                        {
+                            bubblesArray[bubblesIndex] = Instantiate(bubble, spawn1.position, Quaternion.identity, canvas);
+                            whichSpawnPoint = 2;
+                        }
+                        break;
+                }
+                howManyBubbles += 1;
+                timeToSpawn += spawnTime;
+                bubblesIndex++;
+            }
+            for (int i = 0; i < howManyBubbles; i++)
+            {
+                if (bubblesArray[i] != null)
+                {
+                    bubblesArray[i].transform.localPosition = new Vector2(
+                    bubblesArray[i].GetComponent<RectTransform>().localPosition.x - (bubbleSpeed * Time.deltaTime),
+                    bubblesArray[i].GetComponent<RectTransform>().localPosition.y);
+                }
+            }
+            if (howManyBubbles == 5)
+            {
+                bubblesIndex = 0;
+                if (bubblesArray[bubblesIndex].GetComponent<BubbleScript>().isBubbleDead == true)
+                {
+                    howManyBubbles -= 1;
+                    Destroy(bubblesArray[bubblesIndex].gameObject);
+                    bubblesArray[bubblesIndex] = null;
                 }
                 else
                 {
-                    bubblesArray[bubblesIndex] = Instantiate(bubble, spawn2.position, Quaternion.identity, canvas);
+                    bubblesIndex++;
                 }
-                howManyBubbles+=1;
-                timeToSpawn = spawnTime;
-                bubblesIndex++;
+
             }
-            for (int i = 0; i > howManyBubbles; i++)
-            {
-                bubblesArray[i].transform.localPosition = new Vector2(
-                    bubblesArray[i].GetComponent<RectTransform>().localPosition.x - (2 * Time.deltaTime),
-                    bubblesArray[i].GetComponent<RectTransform>().localPosition.y);
-            }
+            timeToSpawn -= Time.deltaTime;
         }
         else
         {
@@ -81,4 +128,5 @@ public class FishGameActivate : MonoBehaviour
             }
         }
     }
+    
 }
