@@ -30,6 +30,7 @@ public class FishGameActivate : MonoBehaviour
     int bubbleWithFish = -1; // Determines which bubble index has a fish
     private string caughtFish;
     private bool isInRange = false;
+    private float tempSpeed;
 
     void Start()
     {
@@ -50,6 +51,7 @@ public class FishGameActivate : MonoBehaviour
                 fishingStarts = false;
                 catchZone.SetActive(true);
                 catPaw.SetActive(true);
+                tempSpeed = bubbleSpeed;
             }
             if (bubbleWithFish >= 0)
             {
@@ -133,7 +135,6 @@ public class FishGameActivate : MonoBehaviour
                 }
                 timeToSpawn += spawnTime;
                 if (bubblesArray[bubblesIndex].GetComponent<BubbleScript>().GetFishState()) bubbleWithFish = bubblesIndex;
-                Debug.Log(bubblesArray[bubblesIndex].gameObject.GetComponent<BubbleScript>().GetFishState() + " is Bubble with fish");
 
                 if (bubblesIndex == 5)
                 {
@@ -154,7 +155,7 @@ public class FishGameActivate : MonoBehaviour
                 }
             }
             timeToSpawn -= Time.deltaTime;
-
+            bubbleSpeed += 0.1f;
         }
     }
     private void finishFishing(bool caught)
@@ -168,6 +169,7 @@ public class FishGameActivate : MonoBehaviour
         timeToSpawn = 0f;
         whichSpawnPoint = 0;
         bubbleWithFish = -1;
+        bubbleSpeed = tempSpeed;
         catPaw.GetComponent<Animator>().SetBool("pawDisappears", true);
         //StartCoroutine(WaitForPaw(10.0f));
 
